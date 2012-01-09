@@ -72,7 +72,7 @@ include build/host-executable.mk
 
 M_NAME := aboot
 M_BASE := 0x40309000
-M_OBJS := arch/omap4/start.o
+M_OBJS := arch/common/start_reloc.o
 M_OBJS += arch/omap4/serial.o 
 M_OBJS += arch/omap4/clock.o
 M_OBJS += arch/omap4/sdram.o
