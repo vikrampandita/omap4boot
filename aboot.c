@@ -30,7 +30,7 @@
 #include <aboot/io.h>
 #include <omap4/mux.h>
 #include <omap4/hw.h>
-#include <omap4/omap4_rom.h>
+#include <common/omap_rom.h>
 
 #define WITH_MEMORY_TEST	0
 #define WITH_FLASH_BOOT		0

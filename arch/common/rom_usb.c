@@ -28,7 +28,7 @@
 
 #include <aboot/aboot.h>
 #include <aboot/io.h>
-#include <omap4/omap4_rom.h>
+#include <common/omap_rom.h>
 
 
 int usb_open(struct usb *usb)
