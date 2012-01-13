@@ -38,15 +38,17 @@ TARGET_LD := $(TOOLCHAIN)ld
 TARGET_OBJCOPY := $(TOOLCHAIN)objcopy
 TARGET_OBJDUMP := $(TOOLCHAIN)objdump
 
+$(shell cat config_$(BOARD).h > include/config.h)
 TARGET_CFLAGS := -g -Os  -Wall
 TARGET_CFLAGS +=  -march=armv7-a -fno-builtin -ffreestanding
 TARGET_CFLAGS += -I. -Iinclude
-TARGET_CFLAGS += -include config_$(BOARD).h
+TARGET_CFLAGS += -include include/config.h
 
 TARGET_LIBGCC := $(shell $(TARGET_CC) $(TARGET_CFLAGS) -print-libgcc-file-name)
 
 HOST_CFLAGS := -g -O2 -Wall
 HOST_CFLAGS += -Itools
+HOST_CFLAGS += -include include/config.h
 
 OUT := out/$(BOARD)
 OUT_HOST_OBJ := $(OUT)/host-obj
@@ -112,6 +114,7 @@ $(OUT_HOST_OBJ)/2ndstage.o: $(OUT)/aboot.bin $(OUT)/bin2c
 
 clean::
 	@echo clean
+	@rm include/config.h
 	@rm -rf $(OUT)
 
 all:: $(ALL)
