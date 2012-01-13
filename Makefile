@@ -32,6 +32,7 @@ what_to_build:: all
 TOOLCHAIN ?= arm-eabi-
 
 BOARD ?= panda
+ARCH ?= omap4
 
 TARGET_CC := $(TOOLCHAIN)gcc
 TARGET_LD := $(TOOLCHAIN)ld
@@ -73,14 +74,17 @@ M_OBJS := tools/bin2c.o
 include build/host-executable.mk
 
 M_NAME := aboot
+ifeq ($(ARCH), omap4)
 M_BASE := 0x40309000
 M_OBJS := arch/common/start_reloc.o
-M_OBJS += arch/common/serial.o
 M_OBJS += arch/omap4/clock.o
 M_OBJS += arch/omap4/sdram.o
 M_OBJS += arch/omap4/gpmc.o
 M_OBJS += arch/omap4/gpio.o
 M_OBJS += arch/omap4/id.o
+endif
+
+M_OBJS += arch/common/serial.o
 M_OBJS += arch/common/rom_usb.o
 M_OBJS += board_$(BOARD).o
 M_OBJS += libc/printf.o 
