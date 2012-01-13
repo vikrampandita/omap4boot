@@ -64,7 +64,7 @@ static unsigned MSG = 0xaabbccdd;
 
 struct usb usb;
 
-unsigned cfg_machine_type = 2791;
+unsigned cfg_machine_type = CONFIG_BOARD_MACH_TYPE;
 
 #if WITH_SIGNATURE_CHECK
 unsigned call_trusted(unsigned appid, unsigned procid, unsigned flag, void *args);
