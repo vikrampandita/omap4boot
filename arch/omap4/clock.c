@@ -454,3 +454,47 @@ void prcm_init(void)
 	enable_all_clocks();
 }
 
+void scale_vcores(void)
+{
+	/* For VC bypass only VCOREx_CGF_FORCE  is necessary and
+	 * VCOREx_CFG_VOLTAGE  changes can be discarded
+	 */
+	/* PRM_VC_CFG_I2C_MODE */
+	writel(0x0, 0x4A307BA8);
+	/* PRM_VC_CFG_I2C_CLK */
+	writel(0x6026, 0x4A307BAC);
+
+	/* set VCORE1 force VSEL */
+	/* PRM_VC_VAL_BYPASS) */
+	writel(0x3A5512, 0x4A307BA0);
+
+	writel(readl(0x4A307BA0) | 0x1000000, 0x4A307BA0);
+	while(readl(0x4A307BA0) & 0x1000000)
+		;
+
+	/* PRM_IRQSTATUS_MPU */
+	writel(readl(0x4A306010), 0x4A306010);
+
+
+	/* FIXME: set VCORE2 force VSEL, Check the reset value */
+	/* PRM_VC_VAL_BYPASS) */
+	writel(0x295B12, 0x4A307BA0);
+	writel(readl(0x4A307BA0) | 0x1000000, 0x4A307BA0);
+	while(readl(0x4A307BA0) & 0x1000000)
+		;
+
+	/* PRM_IRQSTATUS_MPU */
+	writel(readl(0x4A306010), 0x4A306010);
+
+	/*set VCORE3 force VSEL */
+	/* PRM_VC_VAL_BYPASS */
+	writel(0x2A6112, 0x4A307BA0);
+
+	writel(readl(0x4A307BA0) | 0x1000000, 0x4A307BA0);
+
+	while(readl(0x4A307BA0) & 0x1000000)
+		;
+
+	/* PRM_IRQSTATUS_MPU */
+	writel(readl(0x4A306010), 0x4A306010);
+}
