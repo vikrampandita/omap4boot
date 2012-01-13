@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,7 +9,7 @@
  *    notice, this list of conditions and the following disclaimer.
  *  * Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the 
+ *    the documentation and/or other materials provided with the
  *    distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -19,70 +19,42 @@
  * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
  * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
 
-/* omap44x0 serial driver */
+/* omap44xx ID detection and reporting */
 
 #include <aboot/aboot.h>
 #include <aboot/io.h>
-#include <omap4/hw.h>
 #include <omap5/hw.h>
 
-#define OFF_RBR		0x00
-#define OFF_THR		0x00
-#define OFF_DLL		0x00
-#define OFF_IER		0x04
-#define OFF_DLM		0x04
-#define OFF_FCR		0x08
-#define OFF_IIR		0x08
-#define OFF_LCR		0x0C
-#define OFF_MCR		0x10
-#define OFF_LSR		0x14
-#define OFF_MSR		0x18
-#define OFF_SCR		0x1C
-#define OFF_MDR1	0x20
 
-#define WR(val, addr) writeb(val, cfg_uart_base + OFF_##addr)
-#define RD(addr) readb(cfg_uart_base + OFF_##addr)
+struct omap_id {
+	omap_rev    rev_num;
+	u32         rev_reg_val;
+};
 
-unsigned cfg_uart_base = CONFIG_SERIAL_BASE;
+static struct omap_id  map[] = {
+        { OMAP_5430_ES1_DOT_0, 0x0B94202F },
+        { OMAP_REV_INVALID,    0x00000000 },
+};
 
-void serial_init(void)
+#define CONTORL_ID_CODE (0x4A002204)
+omap_rev get_omap_rev(void)
 {
-	unsigned divisor = CONFIG_SERIAL_CLK_HZ / 16 / CONFIG_BAUDRATE;
+	u8 i;
+	u32 id_code;
 
-	WR(0x00, IER);
-	WR(0x07, MDR1); /* reset */
-	WR(0x83, LCR);  /* 8N1 + banksel */
-	WR(divisor & 0xFF, DLL);
-	WR(divisor >> 8, DLM);
-	WR(0x03, LCR);  /* 8N1 */
-	WR(0x03, MCR);  /* DTR, RTS */
-	WR(0x07, FCR);  /* reset and enable FIFO */
-	WR(0x00, MDR1); /* run */
+	id_code = readl(CONTORL_ID_CODE);
+	for (i = 0; map[i].rev_num != OMAP_REV_INVALID; i++) {
+		if (map[i].rev_reg_val == id_code) {
+			return map[i].rev_num;
+		}
+	}
+
+	return OMAP_REV_INVALID;
 }
-
-static inline void _serial_putc(char c)
-{
-	while (!(RD(LSR) & 0x20)) ;
-	WR(c, THR);
-}
-
-void serial_putc(char c)
-{
-	if (c == '\n')
-		_serial_putc('\r');
-	_serial_putc(c);
-}
-
-void serial_puts(const char *s)
-{
-	while (*s)
-		serial_putc(*s++);
-}
-

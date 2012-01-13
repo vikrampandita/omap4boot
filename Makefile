@@ -84,6 +84,12 @@ M_OBJS += arch/omap4/gpio.o
 M_OBJS += arch/omap4/id.o
 endif
 
+ifeq ($(ARCH), omap5)
+M_BASE := 0x40309000
+M_OBJS := arch/common/start_reloc.o
+M_OBJS += arch/omap5/id.o
+endif
+
 M_OBJS += arch/common/serial.o
 M_OBJS += arch/common/rom_usb.o
 M_OBJS += board_$(BOARD).o
