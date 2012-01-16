@@ -306,6 +306,11 @@ int usb_write(usb_handle *h, const void *_data, int len)
         count += xfer;
         len -= xfer;
         data += xfer;
+
+        /* ZLP: after every 64K or 512*n */
+        if ((!(count % (1024*64))) ||
+		(!len && (!(count % 512))))
+            usb_write(h, data, 0);
     }
 
     return count;
