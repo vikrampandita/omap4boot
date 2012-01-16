@@ -107,13 +107,15 @@ include build/target-executable.mk
 
 $(OUT)/aboot.ift: $(OUT)/aboot.bin $(OUT)/mkheader
 	@echo generate $@
-	@./$(OUT)/mkheader $(TEXT_BASE) `wc -c $(OUT)/aboot.bin` > $@
+	@./$(OUT)/mkheader $(TEXT_BASE) `wc -c $(OUT)/aboot.bin` add_gp_hdr > $@
 	@cat $(OUT)/aboot.bin >> $@
 ALL += $(OUT)/aboot.ift
 
-$(OUT_HOST_OBJ)/2ndstage.o: $(OUT)/aboot.bin $(OUT)/bin2c
+$(OUT_HOST_OBJ)/2ndstage.o: $(OUT)/aboot.bin $(OUT)/bin2c $(OUT)/mkheader
 	@echo generate $@
-	$(QUIET)./$(OUT)/bin2c aboot < $(OUT)/aboot.bin > $(OUT)/2ndstage.c
+	@./$(OUT)/mkheader $(TEXT_BASE) `wc -c $(OUT)/aboot.bin` no_gp_hdr > $@
+	@cat $(OUT)/aboot.bin >> $@
+	$(QUIET)./$(OUT)/bin2c aboot < $@ > $(OUT)/2ndstage.c
 	gcc -c -o $@ $(OUT)/2ndstage.c
 
 clean::
