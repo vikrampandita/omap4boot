@@ -34,7 +34,7 @@
 
 #define WITH_MEMORY_TEST	0
 #define WITH_FLASH_BOOT		0
-#define WITH_SIGNATURE_CHECK	1
+#define WITH_SIGNATURE_CHECK	0
 
 #if WITH_MEMORY_TEST
 void memtest(void *x, unsigned count) {
