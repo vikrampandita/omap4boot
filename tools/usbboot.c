@@ -90,7 +90,10 @@ int usb_boot(usb_handle *usb,
 			return -1;
 		}
 		msg_size = sz2;
-		fprintf(stderr,"sending image to target...\n");
+		fprintf(stderr,"sending image to target...size(%d-B/%d-KB/%d-MB)\n",
+								msg_size,
+								msg_size/1024,
+								msg_size/(1024*1024));
 		usb_write(usb, &msg_size, sizeof(msg_size));
 		usb_write(usb, data2, sz2);
 	}
@@ -154,7 +157,8 @@ int main(int argc, char **argv)
 	}
 
 	if (argc < 3) {
-		fprintf(stderr,"using built-in 2ndstage.bin\n");
+		fprintf(stderr,"using built-in 2ndstage.bin of size %d-KB\n",
+								aboot_size/1024);
 		data = aboot_data;
 		sz = aboot_size;
 	} else {
