@@ -12,4 +12,7 @@ void board_late_init(void)
 {
 	/* enable uart3 console */
 	writel(2, 0x4A009550);
+
+	//gpt-2
+	writel(2, 0x4A009438);
 }

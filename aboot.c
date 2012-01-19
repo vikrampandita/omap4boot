@@ -61,6 +61,8 @@ void memtest(void *x, unsigned count) {
 #endif
 
 static unsigned MSG = 0xaabbccdd;
+static unsigned MSG2 = 0xaabbccff;
+static unsigned MSG3 = 0xaabbccee;
 
 struct usb usb;
 
@@ -155,9 +157,35 @@ int load_from_usb(unsigned *_len)
 	if (n)
 		return -1;
 
-	if (usb_read(&usb, (void*) CONFIG_ADDR_DOWNLOAD, len))
+	printf("Got-img-size: u-boot: %d-B@0x%x\n", len, 0x80100000);
+	if (usb_read(&usb, (void*) 0x80100000, len))
 		return -1;
 
+	usb_queue_read(&usb, &len, 4);
+	usb_write(&usb, &MSG2, 4);
+	n = usb_wait_read(&usb);
+	if (n)
+		return -1;
+	printf("Got-img-size: uImage: %d-B@0x%x\n", len, 0x80300000);
+	if (usb_read(&usb, (void*) 0x80300000, len))
+		return -1;
+
+#if 1
+	usb_queue_read(&usb, &len, 4);
+	usb_write(&usb, &MSG3, 4);
+	n = usb_wait_read(&usb);
+	if (n)
+		return -1;
+
+	/* ramdisk */
+	if (len != 0) {
+		printf("Got-img-size: ramdisk: %d-B@0x%x\n", len, 0x81600000);
+		if (usb_read(&usb, (void*) 0x81600000, len))
+			return -1;
+	} else
+		printf("Got-img-size: no-ramdisk\n");
+
+#endif
 	usb_close(&usb);
 
 	disable_irqs();
@@ -231,7 +259,7 @@ void aboot(unsigned *info)
 			for (;;) ;
 		}
 #endif
-		boot_image(cfg_machine_type, CONFIG_ADDR_DOWNLOAD, len);
+		boot_image(info, cfg_machine_type, CONFIG_ADDR_DOWNLOAD, len);
 		serial_puts("*** BOOT FAILED ***\n");
 	}
 

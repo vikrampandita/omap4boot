@@ -29,7 +29,7 @@
 #include <aboot/aboot.h>
 #include <aboot/bootimg.h>
 
-int boot_image(unsigned machtype, unsigned image, unsigned len)
+int boot_image(unsigned *info, unsigned machtype, unsigned image, unsigned len)
 {
 	void (*entry)(unsigned, unsigned, unsigned);
 	struct boot_img_hdr *hdr = (void*) image;
@@ -42,9 +42,9 @@ int boot_image(unsigned machtype, unsigned image, unsigned len)
 		if (x[n] != "ANDROID!"[n]) break;
 
 	if (n != 8) {
-		printf("jumping to 0x%x...\n", CONFIG_ADDR_DOWNLOAD);
-		entry = CONFIG_ADDR_DOWNLOAD;
-		entry(0, cfg_machine_type, CONFIG_ADDR_ATAGS);
+		printf("jumping to 0x%x...\n", 0x80100000);
+		entry = 0x80100000;
+		entry(info, cfg_machine_type, CONFIG_ADDR_ATAGS);
 		for (;;);
 	}
 

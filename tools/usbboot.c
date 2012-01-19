@@ -49,7 +49,9 @@ typedef struct tocentry {
 
 int usb_boot(usb_handle *usb,
 	     void *data, unsigned sz, 
-	     void *data2, unsigned sz2)
+	     void *data2, unsigned sz2,
+	     void *data3, unsigned sz3,
+	     void *data4, unsigned sz4)
 {
 	uint32_t msg_boot = 0xF0030002;
 	uint32_t msg_getid = 0xF0030003;
@@ -83,6 +85,7 @@ int usb_boot(usb_handle *usb,
 	usb_write(usb, data, sz);
 
 	if (data2) {
+		//Ist image
 		fprintf(stderr,"waiting for 2ndstage response...\n");
 		usb_read(usb, &msg_size, sizeof(msg_size));
 		if (msg_size != 0xaabbccdd) {
@@ -96,6 +99,43 @@ int usb_boot(usb_handle *usb,
 								msg_size/(1024*1024));
 		usb_write(usb, &msg_size, sizeof(msg_size));
 		usb_write(usb, data2, sz2);
+
+		//2nd image
+		usb_read(usb, &msg_size, sizeof(msg_size));
+		if (msg_size != 0xaabbccff) {
+			fprintf(stderr,"unexpected 2ndstage response\n");
+			return -1;
+		}
+		msg_size = sz3;
+		fprintf(stderr,"sending image to target...size(%d-B/%d-KB/%d-MB)\n",
+								msg_size,
+								msg_size/1024,
+								msg_size/(1024*1024));
+		usb_write(usb, &msg_size, sizeof(msg_size));
+		sleep(1);
+		usb_write(usb, data3, sz3);
+
+#if 1
+		//3rd image
+		usb_read(usb, &msg_size, sizeof(msg_size));
+		if (msg_size != 0xaabbccee) {
+			fprintf(stderr,"unexpected 2ndstage response\n");
+			return -1;
+		}
+		msg_size = sz4;
+		if (sz4 == 0) {
+			msg_size = 0;
+			fprintf(stderr,"sending image to target... none\n");
+			usb_write(usb, &msg_size, sizeof(msg_size));
+		} else {
+			usb_write(usb, &msg_size, sizeof(msg_size));
+			fprintf(stderr,"sending image to target...size(%d-B/%d-KB/%d-MB)\n",
+								msg_size,
+								msg_size/1024,
+								msg_size/(1024*1024));
+			usb_write(usb, data4, sz4);
+		}
+#endif
 	}
 	
 	return 0;
@@ -147,41 +187,66 @@ extern unsigned aboot_size;
 
 int main(int argc, char **argv)
 {
-	void *data, *data2;
-	unsigned sz, sz2;
+	void *data, *data2, *data3, *data4;
+	unsigned sz, sz2, sz3, sz4 = 0;
 	usb_handle *usb;
 	int once = 1;
 
 	if (argc < 2) {
-		fprintf(stderr,"usage: usbboot [ <2ndstage> ] <image>\n");
+		fprintf(stderr,"usage: usbboot u-boot.bin uImage [ramdisk.img] \n");
 		return 0;
 	}
 
-	if (argc < 3) {
+	argc--;
+	if (1) {
 		fprintf(stderr,"using built-in 2ndstage.bin of size %d-KB\n",
 								aboot_size/1024);
 		data = aboot_data;
 		sz = aboot_size;
-	} else {
-		data = load_file(argv[1], &sz);
+	}
+
+        {
+		data2 = load_file(argv[1], &sz2);
 		if (data == 0) {
 			fprintf(stderr,"cannot load '%s'\n", argv[1]);
 			return -1;
 		}
+		printf("Loaded:%s of size-%d\n", argv[1], sz2);
 		argc--;
 		argv++;
 	}
 	
-	data2 = load_file(argv[1], &sz2);
-	if (data2 == 0) {
-		fprintf(stderr,"cannot load '%s'\n", argv[1]);
-		return -1;
+        {
+		data3 = load_file(argv[1], &sz3);
+		if (data3 == 0) {
+			fprintf(stderr,"cannot load '%s'\n", argv[1]);
+			return -1;
+		}
+		printf("Loaded:%s of size-%d\n", argv[1], sz3);
+		argc--;
+		argv++;
+	}
+
+        if (argc){
+printf("got ramdisk.... %s\n", argv[1]);
+		data4 = load_file(argv[1], &sz4);
+		if (data4 == 0) {
+			fprintf(stderr,"cannot load '%s'\n", argv[1]);
+			return -1;
+		}
+		printf("Loaded:%s of size-%d\n", argv[1], sz4);
+		argc--;
+		argv++;
 	}
 
 	for (;;) {
 		usb = usb_open(match_omap4_bootloader);
 		if (usb)
-			return usb_boot(usb, data, sz, data2, sz2);
+			return usb_boot(usb,
+					data, sz,
+					data2, sz2,
+					data3, sz3,
+					data4, sz4);
 		if (once) {
 			once = 0;
 			fprintf(stderr,"waiting for OMAP44xx device...\n");
