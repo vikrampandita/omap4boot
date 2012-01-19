@@ -1,2 +1,3 @@
 local.mk
 out
+include/config.h
